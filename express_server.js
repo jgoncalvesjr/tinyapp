@@ -3,9 +3,10 @@
 const express = require("express");
 const app = express();
 
-// Default port
+// Default port and templating engine setup
 
 const PORT = 8080; 
+app.set("view engine", "ejs");
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
