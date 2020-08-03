@@ -12,9 +12,17 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+// Endpoints
+
 app.get("/", (req, res) => {
   res.send("Hello!\n");
 });
+
+app.get("/urls.json", (req, res) => {
+  res.send(urlDatabase);
+});
+
+// Server listening
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`)
