@@ -35,7 +35,7 @@ app.get("/urls", (req, res) => {
 // On link shortening POST, generates a random alphanumeric string for shortened link, makes it a key/pair value in urlDatabase object, and redirects to newly created shortened 
 
 app.post("/urls", (req, res) => {
-  console.log(req.body); // logs POST request body to console. Should be 
+  console.log(req.body); // logs POST request body to server console. Should be the long URL 
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = req.body.longURL;
   res.redirect(`/urls/${shortURL}`);
@@ -60,11 +60,23 @@ app.get("/urls/:shortURL", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+// deletes selected link and redirects to Index page (/urls)
+
+app.post("/urls/:shortURL/delete", (req, res) => {
+  delete urlDatabase[req.params.shortURL];
+  console.log(urlDatabase); // prints object without deleted URL in the console
+  res.redirect("/urls");
+});
+
 // Redirection from shortened URL to original URL
 
 app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL];
-  res.redirect(longURL);
+  if (!longURL.includes("http://") || !longURL.includes("https://")) {
+    res.redirect(`http://${longURL}`); 
+  } else {
+    res.redirect(longURL);
+  }
 });
 
 
