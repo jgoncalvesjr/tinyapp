@@ -29,18 +29,18 @@ app.get("/", (req, res) => {
   res.send("Hello!\n");
 });
 
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b>!</body></html>\n");
-});
-
 app.get("/urls", (req, res) => {
   let templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
 
 app.post("/urls", (req, res) => {
-  console.log(req.body);  // Log the POST request body to the console
-  res.send("Ok");         // Respond with 'Ok' (we will replace this)
+  const shortURL = generateRandomString();
+  const longURL = urlDatabase[shortURL];
+  console.log(req.body);
+  urlDatabase[shortURL] = req.body.longURL;
+  console.log(urlDatabase);
+  res.redirect(`/urls/${shortURL}`);
 });
 
 app.get("/urls/new", (req, res) => {
