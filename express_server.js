@@ -25,36 +25,48 @@ const generateRandomString = () => {
 
 // Endpoints
 
-app.get("/", (req, res) => {
-  res.send("Hello!\n");
-});
+// List of shortened URLs
 
 app.get("/urls", (req, res) => {
   let templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
 
+// On link shortening POST, generates a random alphanumeric string for shortened link, makes it a key/pair value in urlDatabase object, and redirects to newly created shortened 
+
 app.post("/urls", (req, res) => {
+  console.log(req.body); // logs POST request body to console. Should be 
   const shortURL = generateRandomString();
-  const longURL = urlDatabase[shortURL];
-  console.log(req.body);
   urlDatabase[shortURL] = req.body.longURL;
-  console.log(urlDatabase);
   res.redirect(`/urls/${shortURL}`);
 });
+
+// New Shortened URL
 
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
+// Lists URL page storage as JSON
+
 app.get("/urls.json", (req, res) => {
   res.send(urlDatabase);
 });
+
+// Redirection from newly created short URL
 
 app.get("/urls/:shortURL", (req, res) => {
   let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
   res.render("urls_show", templateVars);
 });
+
+// Redirection from shortened URL to original URL
+
+app.get("/u/:shortURL", (req, res) => {
+  const longURL = urlDatabase[req.params.shortURL];
+  res.redirect(longURL);
+});
+
 
 // Server listening
 
