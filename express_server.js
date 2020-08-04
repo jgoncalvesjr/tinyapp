@@ -36,6 +36,14 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
+// User login. Stores a cookie with username
+
+app.post("/login", (req, res) => {
+  console.log(req.body); // logs POST request body to server console. Should be the username
+  res.cookie('username', req.body.username);
+  res.redirect('/urls');
+});
+
 // On link shortening POST, generates a random alphanumeric string for shortened link, makes it a key/pair value in urlDatabase object, and redirects to newly created shortened 
 
 app.post("/urls", (req, res) => {
