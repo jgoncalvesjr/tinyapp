@@ -3,12 +3,14 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const app = express();
+const morgan = require('morgan');
 
 // Default port, app and engine usage
 
 const PORT = 8080; 
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(morgan('dev'));
 
 // URL Database
 
@@ -55,8 +57,8 @@ app.get("/urls.json", (req, res) => {
 
 // Redirection from newly created short URL
 
-app.get("/urls/:shortURL", (req, res) => {
-  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
+app.get("/urls/:id", (req, res) => {
+  let templateVars = { shortURL: req.params.id, longURL: urlDatabase[req.params.id] };
   res.render("urls_show", templateVars);
 });
 
@@ -70,16 +72,16 @@ app.post("/urls/:id", (req, res) => {
 
 // deletes selected link and redirects to Index page (/urls)
 
-app.post("/urls/:shortURL/delete", (req, res) => {
-  delete urlDatabase[req.params.shortURL];
+app.post("/urls/:id/delete", (req, res) => {
+  delete urlDatabase[req.params.id];
   console.log(urlDatabase); // prints object without deleted URL in the console
   res.redirect("/urls");
 });
 
 // Redirection from shortened URL to original URL
 
-app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
+app.get("/u/:id", (req, res) => {
+  const longURL = urlDatabase[req.params.id];
   if (!longURL.includes("http://") || !longURL.includes("https://")) {
     res.redirect(`http://${longURL}`); 
   } else {
