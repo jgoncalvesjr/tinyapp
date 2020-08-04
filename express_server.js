@@ -29,6 +29,12 @@ const generateRandomString = () => {
 
 // Endpoints
 
+// Redirection from root
+
+app.get("/", (req, res) => {
+  res.redirect('/urls');
+});
+
 // List of shortened URLs
 
 app.get("/urls", (req, res) => {
