@@ -14,6 +14,31 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(morgan('dev'));
 app.use(cookieParser());
 
+// User database
+
+const users = { 
+  "xp106b": {
+    id: "userRandomID", 
+    email: "user@example.com", 
+    password: "purple-monkey-dinosaur"
+  },
+ "tl3z8n": {
+    id: "user2RandomID", 
+    email: "user2@example.com", 
+    password: "dishwasher-funk"
+  }
+};
+
+// Verification if new user e-mail already exists in database
+
+const verifyUser = email => {
+  for (let user in users) {
+    if (users[user].email === email) {
+      return true;
+    }
+  }
+}
+
 // URL Database
 
 const urlDatabase = {
@@ -29,49 +54,38 @@ const generateRandomString = () => {
 
 // Endpoints
 
+// GET routes
+
 // Redirection from root
 
 app.get("/", (req, res) => {
   res.redirect('/urls');
 });
 
+// Register page
+
+app.get("/register", (req, res) => {
+  const user = req.cookies.userID;
+  const templateVars = { user: users[user] };
+  res.render('urls_register',templateVars);
+});
+
 // List of shortened URLs
 
 app.get("/urls", (req, res) => {
-  let templateVars = { 
-    username: req.cookies["username"], 
+  const user = req.cookies.userID;
+  const templateVars = { 
+    user: users[user], 
     urls: urlDatabase 
   };
   res.render("urls_index", templateVars);
 });
 
-// User login. Stores a cookie with username
-
-app.post("/login", (req, res) => {
-  res.cookie('username', req.body.username);
-  res.redirect('/urls');
-});
-
-// User logout. Clears username cookie
-
-app.post("/logout", (req, res) => {
-  res.clearCookie('username');
-  res.redirect('/urls');
-});
-
-// On link shortening POST, generates a random alphanumeric string for shortened link, makes it a key/pair value in urlDatabase object, and redirects to newly created shortened 
-
-app.post("/urls", (req, res) => {
-  console.log(req.body); // logs POST request body to server console. Should be the long URL 
-  const shortURL = generateRandomString();
-  urlDatabase[shortURL] = req.body.longURL;
-  res.redirect(`/urls/${shortURL}`);
-});
-
 // New Shortened URL
 
 app.get("/urls/new", (req, res) => {
-  const templateVars = { username: req.cookies["username"] };
+  const user = req.cookies.userID;
+  const templateVars = { user: users[user] };
   res.render("urls_new", templateVars);
 });
 
@@ -84,11 +98,70 @@ app.get("/urls.json", (req, res) => {
 // Redirection from newly created short URL
 
 app.get("/urls/:id", (req, res) => {
-  let templateVars = { 
-    username: req.cookies["username"], 
+  const user = req.cookies.userID;
+  const templateVars = { 
+    user: users[user], 
     shortURL: req.params.id, 
     longURL: urlDatabase[req.params.id] };
   res.render("urls_show", templateVars);
+});
+
+// POST routes
+
+// User registration. Stores new user ID, e-mail and password to object and stores cookie with new user ID
+
+app.post("/register", (req, res) => {
+  const id = generateRandomString();
+  const email = req.body.email;
+  const password = req.body.password;
+  if (!email || !password) {
+    return res.status(400).send('No email or password informed!');
+  }
+  if (verifyUser(email)) {
+    return res.status(400).send('This email is already registered!');
+  }
+  users[id] = {
+    id,
+    email,
+    password
+  };
+  res.cookie("userID", id);
+  res.redirect('/urls');
+});
+
+// User login. Stores a cookie with username
+
+app.post("/login", (req, res) => {
+  res.redirect('/urls');
+});
+
+// User logout. Clears username cookie
+
+app.post("/logout", (req, res) => {
+  res.clearCookie('userID');
+  res.redirect('/urls');
+});
+
+// On link shortening POST, generates a random alphanumeric string for shortened link, makes it a key/pair value in urlDatabase object, and redirects to newly created shortened 
+
+app.post("/urls", (req, res) => {
+  console.log(req.body); // logs POST request body to server console. Should be the long URL 
+  const shortURL = generateRandomString();
+  urlDatabase[shortURL] = req.body.longURL;
+  res.redirect(`/urls/${shortURL}`);
+});
+
+// Specific path (:/) routes. GET followed by POST
+
+// Redirection from shortened URL to original URL
+
+app.get("/u/:id", (req, res) => {
+  const longURL = urlDatabase[req.params.id];
+  if (!longURL.includes("http://") || !longURL.includes("https://")) {
+    res.redirect(`http://${longURL}`); 
+  } else {
+    res.redirect(longURL);
+  }
 });
 
 // Updates an existing long page
@@ -106,18 +179,6 @@ app.post("/urls/:id/delete", (req, res) => {
   console.log(urlDatabase); // prints object without deleted URL in the console
   res.redirect("/urls");
 });
-
-// Redirection from shortened URL to original URL
-
-app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id];
-  if (!longURL.includes("http://") || !longURL.includes("https://")) {
-    res.redirect(`http://${longURL}`); 
-  } else {
-    res.redirect(longURL);
-  }
-});
-
 
 // Server listening
 
