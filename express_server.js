@@ -32,15 +32,24 @@ const generateRandomString = () => {
 // List of shortened URLs
 
 app.get("/urls", (req, res) => {
-  let templateVars = { urls: urlDatabase };
+  let templateVars = { 
+    username: req.cookies["username"], 
+    urls: urlDatabase 
+  };
   res.render("urls_index", templateVars);
 });
 
 // User login. Stores a cookie with username
 
 app.post("/login", (req, res) => {
-  console.log(req.body); // logs POST request body to server console. Should be the username
   res.cookie('username', req.body.username);
+  res.redirect('/urls');
+});
+
+// User logout. Clears username cookie
+
+app.post("/logout", (req, res) => {
+  res.clearCookie('username');
   res.redirect('/urls');
 });
 
@@ -56,7 +65,8 @@ app.post("/urls", (req, res) => {
 // New Shortened URL
 
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  const templateVars = { username: req.cookies["username"] };
+  res.render("urls_new", templateVars);
 });
 
 // Lists URL page storage as JSON
@@ -68,7 +78,10 @@ app.get("/urls.json", (req, res) => {
 // Redirection from newly created short URL
 
 app.get("/urls/:id", (req, res) => {
-  let templateVars = { shortURL: req.params.id, longURL: urlDatabase[req.params.id] };
+  let templateVars = { 
+    username: req.cookies["username"], 
+    shortURL: req.params.id, 
+    longURL: urlDatabase[req.params.id] };
   res.render("urls_show", templateVars);
 });
 

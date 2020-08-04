@@ -10,6 +10,16 @@
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
     </div>
+    <% if(username) { %>
+      <div class="form-row align-items-center">
+        <div class="col-auto" style="color: white;">Welcome, <%= username %> !</div>
+        <form action="/logout" method="POST">
+        <div class="col-auto my-1">
+          <button type="submit" class="btn btn-primary" style="background-color:green; color: white; border-color: green;">Logout</button>
+        </form>
+        </div>
+      </div>
+    <% } else { %> 
     <form action="/login" method="POST">
       <div class="form-row align-items-center">
         <div class="col-auto">
@@ -21,5 +31,6 @@
         </div>
       </div>
     </form>
+    <% } %>
   </nav>
 </header>
