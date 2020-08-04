@@ -60,6 +60,14 @@ app.get("/urls/:shortURL", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+// Updates an existing long page
+
+app.post("/urls/:id", (req, res) => {
+  console.log(req.body); // prints the new URL in console
+  urlDatabase[req.params.id] = req.body.longURL;
+  res.redirect('/urls');
+});
+
 // deletes selected link and redirects to Index page (/urls)
 
 app.post("/urls/:shortURL/delete", (req, res) => {
