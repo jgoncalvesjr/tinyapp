@@ -158,6 +158,7 @@ app.post("/register", (req, res) => {
     email,
     password
   };
+  console.log(users[id]);
   res.cookie("userID", id);
   res.redirect('/urls');
 });
@@ -173,7 +174,7 @@ app.post("/login", (req, res) => {
     return;
   }
   const logUser = Object.keys(users).filter((e) => users[e].email === email);
-  if (users[logUser].password !== password) {
+  if (!bcrypt.compareSync(password, users[logUser].password)) {
     res.status(403).send('Password does not match! Please verify your forms!');
     return;
   }
