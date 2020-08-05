@@ -146,7 +146,7 @@ app.get("/urls/:id", (req, res) => {
 app.post("/register", (req, res) => {
   const id = generateRandomString();
   const email = req.body.email;
-  const password = req.body.password;
+  const password = bcrypt.hashSync(req.body.password, salt);
   if (!email || !password) {
     return res.status(400).send('No email or password informed!');
   }
