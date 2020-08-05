@@ -31,18 +31,10 @@ const users = {
 
 // Verification if new user e-mail already exists in database
 
-const verifyUser = email => {
+const verifyEmail = email => {
   for (let user in users) {
     if (users[user].email === email) {
       return true;
-    }
-  }
-};
-
-const fecthUser = (email) => {
-  for (let user in users) {
-    if (users[user].email === email) {
-      return users[user];
     }
   }
 };
@@ -134,7 +126,7 @@ app.post("/register", (req, res) => {
   if (!email || !password) {
     return res.status(400).send('No email or password informed!');
   }
-  if (verifyUser(email)) {
+  if (verifyEmail(email)) {
     return res.status(400).send('This email is already registered!');
   }
   users[id] = {
@@ -149,17 +141,19 @@ app.post("/register", (req, res) => {
 // User login. Stores cookie with new user ID
 
 app.post("/login", (req, res) => {
-  const userEmails = Object.keys(users).map((e) => users[e].email);
-  if (!userEmails.includes(req.body.email)) {
+  const email = req.body.email;
+  const password = req.body.password;
+  // const userEmails = Object.keys(users).map((e) => users[e].email);
+  if (!verifyEmail(email)) {
     res.status(403).send('User not found! Please verify your forms!');
     return;
   }
-  const myUser = Object.keys(users).filter((e) => users[e].email === req.body.email);
-  if (users[myUser].password !== req.body.password) {
+  const logUser = Object.keys(users).filter((e) => users[e].email === email);
+  if (users[logUser].password !== password) {
     res.status(403).send('Password does not match! Please verify your forms!');
     return;
   }
-  res.cookie('userID', users[myUser].id);
+  res.cookie('userID', users[logUser].id);
   res.redirect('/urls');
 });
 
@@ -185,10 +179,10 @@ app.post("/urls", (req, res) => {
 
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
-  if (!longURL.includes("http://") || !longURL.includes("https://")) {
-    res.redirect(`http://${longURL}`);
-  } else {
+  if (longURL.includes("http://") || longURL.includes("https://")) {
     res.redirect(longURL);
+  } else {
+    res.redirect(`http://${longURL}`);
   }
 });
 
