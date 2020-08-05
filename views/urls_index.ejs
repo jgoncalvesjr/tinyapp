@@ -12,7 +12,13 @@
   <main style="margin: 1em;">
 
     <%- include('partials/_header') %>
-
+    
+    <% if(!user) { %> 
+    <div style="text-align: center; margin: auto; padding: 1.5em;">
+      <p>Welcome to TinyApp! This app shortens any web address for your convenience!</p>
+      <p>Please log in to access your TinyApp account. If you are new to TinyApp, you should <strong>register</strong> first.</p>
+    </div>
+    <% } else { %>    
     <table class="table">
       <thead>
         <tr>
@@ -41,6 +47,7 @@
         <% } %>
       </tbody>
     </table>
+    <% } %>
   </main>
   <!-- Bootstrap JS -->
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
