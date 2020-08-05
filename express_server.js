@@ -29,6 +29,14 @@ const users = {
   }
 };
 
+// URL Database
+
+const urlDatabase = {
+  "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userID: "xp106b" },
+  "9sm5xK": { longURL: "http://www.google.com", userID: "xp106b" }
+};
+
+
 // Verification if new user e-mail already exists in database
 
 const verifyEmail = email => {
@@ -37,13 +45,6 @@ const verifyEmail = email => {
       return true;
     }
   }
-};
-
-// URL Database
-
-const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
 };
 
 // Random ID Generator - generates a random a string of 6 random aplhanumeric characters
@@ -87,6 +88,7 @@ app.get("/urls", (req, res) => {
     user: users[user],
     urls: urlDatabase
   };
+  console.log(templateVars.urls)
   res.render("urls_index", templateVars);
 });
 
@@ -114,7 +116,7 @@ app.get("/urls/:id", (req, res) => {
   const templateVars = {
     user: users[user],
     shortURL: req.params.id,
-    longURL: urlDatabase[req.params.id] };
+    longURL: urlDatabase[req.params.id].longURL };
   res.render("urls_show", templateVars);
 });
 
@@ -181,7 +183,7 @@ app.post("/urls", (req, res) => {
 // Redirection from shortened URL to original URL
 
 app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id];
+  const longURL = urlDatabase[req.params.id].longURL;
   if (longURL.includes("http://") || longURL.includes("https://")) {
     res.redirect(longURL);
   } else {
