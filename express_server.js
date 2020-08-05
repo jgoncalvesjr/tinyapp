@@ -3,6 +3,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser');
+const bcrypt = require('bcrypt');
 const app = express();
 const morgan = require('morgan');
 
@@ -10,6 +11,8 @@ const morgan = require('morgan');
 
 const PORT = 8080;
 app.set("view engine", "ejs");
+const saltRounds = 10;
+const salt = bcrypt.genSaltSync(saltRounds);
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(morgan('dev'));
 app.use(cookieParser());
@@ -20,12 +23,12 @@ const users = {
   "xp106b": {
     id: "userRandomID",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur"
+    password: bcrypt.hashSync("purple-monkey-dinosaur", salt)
   },
   "tl3z8n": {
     id: "user2RandomID",
     email: "user2@example.com",
-    password: "dishwasher-funk"
+    password: bcrypt.hashSync("dishwasher-funk", salt)
   }
 };
 
