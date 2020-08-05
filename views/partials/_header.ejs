@@ -20,13 +20,12 @@
         </div>
       </div>
     <% } else { %> 
-    <form action="/login" method="POST">
-      <div class="form-row align-items-center">
-        <div class="col-auto my-1">
-          <button type="submit" class="btn btn-primary" style="background-color:green; color: white; border-color: green;">Login</button>
-        </div>
+      <div class="col-auto my-1">
+        <a href= "/login"><button type="submit" class="btn btn-primary" style="background-color:green; color: white; border-color: green;">Login</button></a>
+      </div
+      <div class="col-auto my-1">
+        <a href= "/register"><button type="submit" class="btn btn-primary" style="background-color:green; color: white; border-color: green;">Register</button></a>
       </div>
-    </form>
     <% } %>
   </nav>
 </header>

@@ -8,7 +8,7 @@ const morgan = require('morgan');
 
 // Default port, app and engine usage
 
-const PORT = 8080; 
+const PORT = 8080;
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(morgan('dev'));
@@ -16,15 +16,15 @@ app.use(cookieParser());
 
 // User database
 
-const users = { 
+const users = {
   "xp106b": {
-    id: "userRandomID", 
-    email: "user@example.com", 
+    id: "userRandomID",
+    email: "user@example.com",
     password: "purple-monkey-dinosaur"
   },
- "tl3z8n": {
-    id: "user2RandomID", 
-    email: "user2@example.com", 
+  "tl3z8n": {
+    id: "user2RandomID",
+    email: "user2@example.com",
     password: "dishwasher-funk"
   }
 };
@@ -37,7 +37,15 @@ const verifyUser = email => {
       return true;
     }
   }
-}
+};
+
+const fecthUser = (email) => {
+  for (let user in users) {
+    if (users[user].email === email) {
+      return users[user];
+    }
+  }
+};
 
 // URL Database
 
@@ -50,7 +58,7 @@ const urlDatabase = {
 
 const generateRandomString = () => {
   return Math.random().toString(36).substring(2,8);
-}
+};
 
 // Endpoints
 
@@ -70,13 +78,22 @@ app.get("/register", (req, res) => {
   res.render('urls_register',templateVars);
 });
 
+// Login page
+
+app.get("/login", (req, res) => {
+  const user = req.cookies.userID;
+  const templateVars = { user: users[user] };
+  res.render('urls_login',templateVars);
+});
+
+
 // List of shortened URLs
 
 app.get("/urls", (req, res) => {
   const user = req.cookies.userID;
-  const templateVars = { 
-    user: users[user], 
-    urls: urlDatabase 
+  const templateVars = {
+    user: users[user],
+    urls: urlDatabase
   };
   res.render("urls_index", templateVars);
 });
@@ -99,9 +116,9 @@ app.get("/urls.json", (req, res) => {
 
 app.get("/urls/:id", (req, res) => {
   const user = req.cookies.userID;
-  const templateVars = { 
-    user: users[user], 
-    shortURL: req.params.id, 
+  const templateVars = {
+    user: users[user],
+    shortURL: req.params.id,
     longURL: urlDatabase[req.params.id] };
   res.render("urls_show", templateVars);
 });
@@ -129,23 +146,34 @@ app.post("/register", (req, res) => {
   res.redirect('/urls');
 });
 
-// User login. Stores a cookie with username
+// User login. Stores cookie with new user ID
 
 app.post("/login", (req, res) => {
+  const userEmails = Object.keys(users).map((e) => users[e].email);
+  if (!userEmails.includes(req.body.email)) {
+    res.status(403).send('User not found! Please verify your forms!');
+    return;
+  }
+  const myUser = Object.keys(users).filter((e) => users[e].email === req.body.email);
+  if (users[myUser].password !== req.body.password) {
+    res.status(403).send('Password does not match! Please verify your forms!');
+    return;
+  }
+  res.cookie('userID', users[myUser].id);
   res.redirect('/urls');
 });
 
-// User logout. Clears username cookie
+// User logout. Clears user ID cookie
 
 app.post("/logout", (req, res) => {
   res.clearCookie('userID');
   res.redirect('/urls');
 });
 
-// On link shortening POST, generates a random alphanumeric string for shortened link, makes it a key/pair value in urlDatabase object, and redirects to newly created shortened 
+// On link shortening POST, generates a random alphanumeric string for shortened link, makes it a key/pair value in urlDatabase object, and redirects to newly created shortened
 
 app.post("/urls", (req, res) => {
-  console.log(req.body); // logs POST request body to server console. Should be the long URL 
+  console.log(req.body); // logs POST request body to server console. Should be the long URL
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = req.body.longURL;
   res.redirect(`/urls/${shortURL}`);
@@ -158,7 +186,7 @@ app.post("/urls", (req, res) => {
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
   if (!longURL.includes("http://") || !longURL.includes("https://")) {
-    res.redirect(`http://${longURL}`); 
+    res.redirect(`http://${longURL}`);
   } else {
     res.redirect(longURL);
   }
@@ -183,5 +211,5 @@ app.post("/urls/:id/delete", (req, res) => {
 // Server listening
 
 app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`)
-})
+  console.log(`Example app listening on port ${PORT}!`);
+});
