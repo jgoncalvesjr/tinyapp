@@ -99,6 +99,7 @@ app.get("/urls/new", (req, res) => {
   const templateVars = { user: users[user] };
   if (!user) {
     res.redirect('/login');
+    return;
   }
   res.render("urls_new", templateVars);
 });
@@ -173,8 +174,15 @@ app.post("/logout", (req, res) => {
 
 app.post("/urls", (req, res) => {
   console.log(req.body); // logs POST request body to server console. Should be the long URL
+  const user = req.cookies.userID;
   const shortURL = generateRandomString();
-  urlDatabase[shortURL] = req.body.longURL;
+  if (!req.body.longURL) {
+    return res.status(400).send('Web address cannot be empty!');
+  }
+  urlDatabase[shortURL] = {
+    longURL: req.body.longURL,
+    UserID: users[user].id
+  }
   res.redirect(`/urls/${shortURL}`);
 });
 
@@ -184,6 +192,7 @@ app.post("/urls", (req, res) => {
 
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id].longURL;
+  console.log(longURL);
   if (longURL.includes("http://") || longURL.includes("https://")) {
     res.redirect(longURL);
   } else {
@@ -195,7 +204,10 @@ app.get("/u/:id", (req, res) => {
 
 app.post("/urls/:id", (req, res) => {
   console.log(req.body); // prints the new URL in console
-  urlDatabase[req.params.id] = req.body.longURL;
+  if (!req.body.longURL) {
+    return res.status(400).send('Web address cannot be empty!');
+  }
+  urlDatabase[req.params.id].longURL = req.body.longURL;
   res.redirect('/urls');
 });
 
