@@ -37,6 +37,10 @@ app.use(cookieSession({
 // Redirection from root
 
 app.get("/", (req, res) => {
+  const user = req.session.user_id;
+  if(!user) {
+    res.redirect('/login');
+  }
   res.redirect('/urls');
 });
 
@@ -44,6 +48,9 @@ app.get("/", (req, res) => {
 
 app.get("/register", (req, res) => {
   const user = req.session.user_id;
+  if (user) {
+    return res.redirect("/urls");
+  }
   const templateVars = { user: users[user] };
   res.render('urls_register',templateVars);
 });
@@ -52,6 +59,9 @@ app.get("/register", (req, res) => {
 
 app.get("/login", (req, res) => {
   const user = req.session.user_id;
+  if (user) {
+    return res.redirect("/urls");
+  }
   const templateVars = {
     user: users[user],
   };
@@ -75,7 +85,7 @@ app.get("/urls", (req, res) => {
 app.get("/urls/new", (req, res) => {
   const user = req.session.user_id;
   if (!user) {
-    return res.redirect('/urls');
+    return res.redirect('/login');
   }
   const templateVars = { user: users[user] };
   res.render("urls_new", templateVars);
@@ -92,6 +102,9 @@ app.get("/urls/:id", (req, res) => {
   if (!user) {
     return res.redirect('/urls');
   }
+  if (urlDatabase[req.params.id].userID !== user) {
+    return res.status(403).send('TinyURL does not belong to current user, permission denied!\n');
+  }
   res.render("urls_show", templateVars);
 });
 
@@ -102,13 +115,14 @@ app.get("/urls/:id", (req, res) => {
 app.post("/register", (req, res) => {
   const id = generateRandomString();
   const email = req.body.email;
-  const password = bcrypt.hashSync(req.body.password, salt);
+  let password = req.body.password;
   if (!email || !password) {
-    return res.status(400).send('No email or password informed!');
+    return res.status(400).send('Empty email or password! Please insert a valid email and a valid password!');
   }
   if (getUserByEmail(email, users)) {
     return res.status(400).send('This email is already registered!');
   }
+  password = bcrypt.hashSync(password, salt);
   users[id] = {
     id,
     email,
@@ -125,7 +139,7 @@ app.post("/login", (req, res) => {
   const password = req.body.password;
   const logUser = getUserByEmail(email, users);
   if (!logUser || !bcrypt.compareSync(password, users[logUser].password)) {
-    res.status(403).send('User or password do not match! Please verify your forms!');
+    res.status(401).send('User or password do not match! Please verify your forms!');
     return;
   }
   req.session.user_id = users[logUser].id;
@@ -156,6 +170,9 @@ app.post("/urls", (req, res) => {
 // Redirection from shortened URL to original URL. Makes sure it goes to a http:// address
 
 app.get("/u/:id", (req, res) => {
+  if (!urlDatabase[req.params.id]) {
+    return res.status(404).send('TinyURL not found!\n');
+  }
   const longURL = urlDatabase[req.params.id].longURL;
   if (longURL.includes("http://") || longURL.includes("https://")) {
     res.redirect(longURL);
@@ -176,7 +193,7 @@ app.post("/urls/:id", (req, res) => {
   }
   if (userURL.hasOwnProperty(shortURL)) {
     urlDatabase[shortURL] = { longURL, userID };
-    return res.redirect(`/urls/${shortURL}`);
+    return res.redirect(`/urls`);
   }
   res.status(403).send('TinyURL does not belong to current user, permission denied!\n');
 });

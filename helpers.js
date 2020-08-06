@@ -1,16 +1,5 @@
 // Helper functions here
 
-// Verification if new user e-mail already exists in database
-
-const verifyEmail = (database, email) => {
-  for (let user in database) {
-    if (database[user].email === email) {
-      return true;
-    }
-  }
-  return false;
-};
-
 // Filters URL database belonging to that specific user
 
 const urlsForUser = (database, id) => {
@@ -41,7 +30,6 @@ const generateRandomString = () => {
 
 module.exports = {
   generateRandomString,
-  verifyEmail,
   getUserByEmail,
   urlsForUser
 };
