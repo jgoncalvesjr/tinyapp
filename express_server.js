@@ -1,4 +1,4 @@
-// Middleware Depedencies
+// Middleware Depedencies, helper functions and databases
 
 const express = require("express");
 const bodyParser = require("body-parser");
@@ -6,6 +6,7 @@ const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
 const app = express();
 const morgan = require('morgan');
+const methodOverride = require('method-override');
 const {
   generateRandomString,
   getUserByEmail,
@@ -24,6 +25,7 @@ const saltRounds = 10;
 const salt = bcrypt.genSaltSync(saltRounds);
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(morgan('dev'));
+app.use(methodOverride('_method'));
 app.use(cookieSession({
   name: 'session',
   keys: ['$2y$10$tWNvobOiIxH1OQA4Wx2kduY2pO1LyJgb4.t.U5L9qTYOdpKPrf1iC',
@@ -148,7 +150,7 @@ app.post("/login", (req, res) => {
 
 // User logout. Clears cookie session
 
-app.post("/logout", (req, res) => {
+app.delete("/logout", (req, res) => {
   req.session = null;
   res.redirect('/urls');
 });
@@ -183,7 +185,7 @@ app.get("/u/:id", (req, res) => {
 
 // Updates an existing shortened URL with new long URL. Only user who owns short URL can change it
 
-app.post("/urls/:id", (req, res) => {
+app.put("/urls/:id", (req, res) => {
   const shortURL = req.params.id;
   const longURL = req.body.longURL;
   const userID = req.session.user_id;
@@ -198,9 +200,9 @@ app.post("/urls/:id", (req, res) => {
   res.status(403).send('TinyURL does not belong to current user, permission denied!\n');
 });
 
-// Updates an existing shortened URL. Only user who owns short URL can delete it
+// Deletes an existing shortened URL. Only user who owns short URL can delete it
 
-app.post("/urls/:id/delete", (req, res) => {
+app.delete("/urls/:id", (req, res) => {
   const userID = req.session.user_id;
   const shortURL = req.params.id;
   const userURL = urlsForUser(urlDatabase, userID);

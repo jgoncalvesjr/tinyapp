@@ -13,7 +13,7 @@
     <% if(user) { %>
       <div class="form-row align-items-center">
         <div class="col-auto" style="color: white;">Welcome, <%= user.email %> !</div>
-        <form action="/logout" method="POST">
+        <form method="POST" action="/logout?_method=DELETE">
         <div class="col-auto my-1">
           <button type="submit" class="btn btn-primary" style="background-color:green; color: white; border-color: green;">Logout</button>
         </form>

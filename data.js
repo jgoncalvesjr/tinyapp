@@ -1,4 +1,4 @@
-// Databases here. 
+// Databases here
 
 // User Database
 

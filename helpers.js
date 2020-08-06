@@ -10,16 +10,16 @@ const urlsForUser = (database, id) => {
     }
   }
   return userData;
-}
+};
 
 // Searches user by e-mail, returns a string with user ID
 
 const getUserByEmail = (email, database) => {
-  user = Object.keys(database).filter((elem) => database[elem].email === email).toString();
+  const user = Object.keys(database).filter((elem) => database[elem].email === email).toString();
   if (!user) {
     return undefined;
   }
-  return user; 
+  return user;
 };
 
 // Random ID Generator - generates a random a string of 6 random aplhanumeric characters
