@@ -1,4 +1,4 @@
-// Depedencies
+// Middleware Depedencies
 
 const express = require("express");
 const bodyParser = require("body-parser");
@@ -8,7 +8,6 @@ const app = express();
 const morgan = require('morgan');
 const {
   generateRandomString,
-  verifyEmail,
   getUserByEmail,
   urlsForUser
 } = require('./helpers');
@@ -17,7 +16,7 @@ const {
   urlDatabase
 } = require('./data');
 
-// Default port, app and engine usage
+// Default port, middleware configuration
 
 const PORT = 8080;
 app.set("view engine", "ejs");
@@ -27,7 +26,8 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(morgan('dev'));
 app.use(cookieSession({
   name: 'session',
-  keys: ['cookieStorageForTinyAppWebsite', 'Very secure long sentence']
+  keys: ['$2y$10$tWNvobOiIxH1OQA4Wx2kduY2pO1LyJgb4.t.U5L9qTYOdpKPrf1iC',
+    '$2y$10$hQKw8jKo47lgT4PpvQNvce1YHr6TkjUH.3qODlUolS1orGxWWGtZS']
 }));
 
 // Endpoints
@@ -59,7 +59,7 @@ app.get("/login", (req, res) => {
 });
 
 
-// List of shortened URLs
+// List of shortened URLs. If no user is logged, becomes a welcome page with message and login/registration instructions.
 
 app.get("/urls", (req, res) => {
   const user = req.session.user_id;
@@ -70,7 +70,7 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
-// New Shortened URL
+// Link to create a new Shortened URL. If no user is logged, redirects to welcome page
 
 app.get("/urls/new", (req, res) => {
   const user = req.session.user_id;
@@ -81,7 +81,7 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new", templateVars);
 });
 
-// Redirection from newly created short URL
+// Redirection from newly created short URL. If no user is logged, redirects to welcome page
 
 app.get("/urls/:id", (req, res) => {
   const user = req.session.user_id;
@@ -97,7 +97,7 @@ app.get("/urls/:id", (req, res) => {
 
 // POST routes
 
-// User registration. Stores new user ID, e-mail and password to object and stores cookie with new user ID
+// User registration. Stores new user ID, e-mail and password to object and stores cookie with new session ID
 
 app.post("/register", (req, res) => {
   const id = generateRandomString();
@@ -106,7 +106,7 @@ app.post("/register", (req, res) => {
   if (!email || !password) {
     return res.status(400).send('No email or password informed!');
   }
-  if (verifyEmail(users, email)) {
+  if (getUserByEmail(email, users)) {
     return res.status(400).send('This email is already registered!');
   }
   users[id] = {
@@ -118,18 +118,13 @@ app.post("/register", (req, res) => {
   res.redirect('/urls');
 });
 
-// User login. Stores cookie with new user ID
+// User login. Stores cookie with new session ID
 
 app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  if (!verifyEmail(users, email)) {
-    res.status(403).send('User or password do not match! Please verify your forms!');
-    return;
-  }
   const logUser = getUserByEmail(email, users);
-  // const logUser = Object.keys(users).filter((e) => users[e].email === email);
-  if (!bcrypt.compareSync(password, users[logUser].password)) {
+  if (!logUser || !bcrypt.compareSync(password, users[logUser].password)) {
     res.status(403).send('User or password do not match! Please verify your forms!');
     return;
   }
@@ -137,30 +132,28 @@ app.post("/login", (req, res) => {
   res.redirect('/urls');
 });
 
-// User logout. Clears user ID cookie
+// User logout. Clears cookie session
 
 app.post("/logout", (req, res) => {
   req.session = null;
   res.redirect('/urls');
 });
 
-// On link shortening POST, generates a random alphanumeric string for shortened link, makes it a key/pair value in urlDatabase object, and redirects to newly created shortened page
+// Created new short URL, stores it to URL database associating it to creator user, and redirects to new short URL details
 
 app.post("/urls", (req, res) => {
-  // console.log(req.body); // logs POST request body to server console. Should be the long URL
   const userID = req.session.user_id;
   const shortURL = generateRandomString();
   if (!req.body.longURL) {
     return res.status(400).send('Web address cannot be empty!');
   }
   urlDatabase[shortURL] = { longURL: req.body.longURL, userID };
-  // console.log(urlDatabase);
   res.redirect(`/urls/${shortURL}`);
 });
 
 // Specific path routes. GET followed by POST
 
-// Redirection from shortened URL to original URL
+// Redirection from shortened URL to original URL. Makes sure it goes to a http:// address
 
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id].longURL;
@@ -171,7 +164,7 @@ app.get("/u/:id", (req, res) => {
   }
 });
 
-// Updates an existing long page
+// Updates an existing shortened URL with new long URL. Only user who owns short URL can change it
 
 app.post("/urls/:id", (req, res) => {
   const shortURL = req.params.id;
@@ -188,7 +181,7 @@ app.post("/urls/:id", (req, res) => {
   res.status(403).send('TinyURL does not belong to current user, permission denied!\n');
 });
 
-// deletes selected link and redirects to Index page (/urls)
+// Updates an existing shortened URL. Only user who owns short URL can delete it
 
 app.post("/urls/:id/delete", (req, res) => {
   const userID = req.session.user_id;
@@ -204,5 +197,5 @@ app.post("/urls/:id/delete", (req, res) => {
 // Server listening
 
 app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
+  console.log(`TinyApp Server Listening on port ${PORT}!`);
 });

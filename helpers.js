@@ -8,6 +8,7 @@ const verifyEmail = (database, email) => {
       return true;
     }
   }
+  return false;
 };
 
 // Filters URL database belonging to that specific user
@@ -22,10 +23,14 @@ const urlsForUser = (database, id) => {
   return userData;
 }
 
-// Searches user by e-mail
+// Searches user by e-mail, returns a string with user ID
 
 const getUserByEmail = (email, database) => {
-  return Object.keys(database).filter((elem) => database[elem].email === email);
+  user = Object.keys(database).filter((elem) => database[elem].email === email).toString();
+  if (!user) {
+    return undefined;
+  }
+  return user; 
 };
 
 // Random ID Generator - generates a random a string of 6 random aplhanumeric characters
