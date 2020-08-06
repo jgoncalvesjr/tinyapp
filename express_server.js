@@ -2,7 +2,7 @@
 
 const express = require("express");
 const bodyParser = require("body-parser");
-const cookieParser = require('cookie-parser');
+const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
 const app = express();
 const morgan = require('morgan');
@@ -15,7 +15,10 @@ const saltRounds = 10;
 const salt = bcrypt.genSaltSync(saltRounds);
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(morgan('dev'));
-app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  keys: ['cookieStorageForTinyAppWebsite', 'Very secure long sentence']
+}));
 
 // User database
 
@@ -81,7 +84,7 @@ app.get("/", (req, res) => {
 // Register page
 
 app.get("/register", (req, res) => {
-  const user = req.cookies.userID;
+  const user = req.session.user_id;
   const templateVars = { user: users[user] };
   res.render('urls_register',templateVars);
 });
@@ -89,7 +92,7 @@ app.get("/register", (req, res) => {
 // Login page
 
 app.get("/login", (req, res) => {
-  const user = req.cookies.userID;
+  const user = req.session.user_id;
   const templateVars = { 
     user: users[user],
   };
@@ -100,7 +103,7 @@ app.get("/login", (req, res) => {
 // List of shortened URLs
 
 app.get("/urls", (req, res) => {
-  const user = req.cookies.userID;
+  const user = req.session.user_id;
   const templateVars = {
     user: users[user],
     urls: urlsForUser(user)
@@ -111,7 +114,7 @@ app.get("/urls", (req, res) => {
 // New Shortened URL
 
 app.get("/urls/new", (req, res) => {
-  const user = req.cookies.userID;
+  const user = req.session.user_id;
   if (!user) {
     return res.redirect('/urls');
   }
@@ -128,7 +131,7 @@ app.get("/urls.json", (req, res) => {
 // Redirection from newly created short URL
 
 app.get("/urls/:id", (req, res) => {
-  const user = req.cookies.userID;
+  const user = req.session.user_id;
   const templateVars = {
     user: users[user],
     shortURL: req.params.id,
@@ -159,7 +162,7 @@ app.post("/register", (req, res) => {
     password
   };
   console.log(users[id]);
-  res.cookie("userID", id);
+  req.session.user_id = id;
   res.redirect('/urls');
 });
 
@@ -168,24 +171,23 @@ app.post("/register", (req, res) => {
 app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  // const userEmails = Object.keys(users).map((e) => users[e].email);
   if (!verifyEmail(email)) {
-    res.status(403).send('User not found! Please verify your forms!');
+    res.status(403).send('User or password do not match! Please verify your forms!');
     return;
   }
   const logUser = Object.keys(users).filter((e) => users[e].email === email);
   if (!bcrypt.compareSync(password, users[logUser].password)) {
-    res.status(403).send('Password does not match! Please verify your forms!');
+    res.status(403).send('User or password do not match! Please verify your forms!');
     return;
   }
-  res.cookie('userID', users[logUser].id);
+  req.session.user_id = users[logUser].id;
   res.redirect('/urls');
 });
 
 // User logout. Clears user ID cookie
 
 app.post("/logout", (req, res) => {
-  res.clearCookie('userID');
+  req.session = null;
   res.redirect('/urls');
 });
 
@@ -193,7 +195,7 @@ app.post("/logout", (req, res) => {
 
 app.post("/urls", (req, res) => {
   console.log(req.body); // logs POST request body to server console. Should be the long URL
-  const userID = req.cookies.userID;
+  const userID = req.session.user_id; 
   const shortURL = generateRandomString();
   if (!req.body.longURL) {
     return res.status(400).send('Web address cannot be empty!');
@@ -223,7 +225,7 @@ app.post("/urls/:id", (req, res) => {
   console.log(req.body); // prints the new URL in console
   const shortURL = req.params.id;
   const longURL = req.body.longURL;
-  const userID = req.cookies.userID;
+  const userID = req.session.user_id;
   const userURL = urlsForUser(userID);
   if (!longURL) {
     return res.status(400).send('Web address cannot be empty!');
@@ -238,7 +240,7 @@ app.post("/urls/:id", (req, res) => {
 // deletes selected link and redirects to Index page (/urls)
 
 app.post("/urls/:id/delete", (req, res) => {
-  const userID = req.cookies.userID;
+  const userID = req.session.user_id;
   const shortURL = req.params.id;
   const userURL = urlsForUser(userID);
   if (userURL.hasOwnProperty(shortURL)) {
