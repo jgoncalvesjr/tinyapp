@@ -6,6 +6,16 @@ const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
 const app = express();
 const morgan = require('morgan');
+const {
+  generateRandomString,
+  verifyEmail,
+  getUserByEmail,
+  urlsForUser
+} = require('./helpers');
+const {
+  users,
+  urlDatabase
+} = require('./data');
 
 // Default port, app and engine usage
 
@@ -19,57 +29,6 @@ app.use(cookieSession({
   name: 'session',
   keys: ['cookieStorageForTinyAppWebsite', 'Very secure long sentence']
 }));
-
-// User database
-
-const users = {
-  "xp106b": {
-    id: "userRandomID",
-    email: "user@example.com",
-    password: bcrypt.hashSync("purple-monkey-dinosaur", salt)
-  },
-  "tl3z8n": {
-    id: "user2RandomID",
-    email: "user2@example.com",
-    password: bcrypt.hashSync("dishwasher-funk", salt)
-  }
-};
-
-// URL Database
-
-const urlDatabase = {
-  "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userID: "xp106b" },
-  "9sm5xK": { longURL: "http://www.google.com", userID: "xp106b" }
-};
-
-
-// Verification if new user e-mail already exists in database
-
-const verifyEmail = email => {
-  for (let user in users) {
-    if (users[user].email === email) {
-      return true;
-    }
-  }
-};
-
-// Filters URL database belonging to that specific user
-
-const urlsForUser = id => {
-  const userData = {};
-  for (const url in urlDatabase) {
-    if (urlDatabase[url].userID === id) {
-      userData[url] = urlDatabase[url];
-    }
-  }
-  return userData;
-}
-
-// Random ID Generator - generates a random a string of 6 random aplhanumeric characters
-
-const generateRandomString = () => {
-  return Math.random().toString(36).substring(2,8);
-};
 
 // Endpoints
 
@@ -93,7 +52,7 @@ app.get("/register", (req, res) => {
 
 app.get("/login", (req, res) => {
   const user = req.session.user_id;
-  const templateVars = { 
+  const templateVars = {
     user: users[user],
   };
   res.render('urls_login',templateVars);
@@ -106,7 +65,7 @@ app.get("/urls", (req, res) => {
   const user = req.session.user_id;
   const templateVars = {
     user: users[user],
-    urls: urlsForUser(user)
+    urls: urlsForUser(urlDatabase, user)
   };
   res.render("urls_index", templateVars);
 });
@@ -120,12 +79,6 @@ app.get("/urls/new", (req, res) => {
   }
   const templateVars = { user: users[user] };
   res.render("urls_new", templateVars);
-});
-
-// Lists URL page storage as JSON
-
-app.get("/urls.json", (req, res) => {
-  res.send(urlDatabase);
 });
 
 // Redirection from newly created short URL
@@ -153,7 +106,7 @@ app.post("/register", (req, res) => {
   if (!email || !password) {
     return res.status(400).send('No email or password informed!');
   }
-  if (verifyEmail(email)) {
+  if (verifyEmail(users, email)) {
     return res.status(400).send('This email is already registered!');
   }
   users[id] = {
@@ -161,7 +114,6 @@ app.post("/register", (req, res) => {
     email,
     password
   };
-  console.log(users[id]);
   req.session.user_id = id;
   res.redirect('/urls');
 });
@@ -171,11 +123,12 @@ app.post("/register", (req, res) => {
 app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  if (!verifyEmail(email)) {
+  if (!verifyEmail(users, email)) {
     res.status(403).send('User or password do not match! Please verify your forms!');
     return;
   }
-  const logUser = Object.keys(users).filter((e) => users[e].email === email);
+  const logUser = getUserByEmail(email, users);
+  // const logUser = Object.keys(users).filter((e) => users[e].email === email);
   if (!bcrypt.compareSync(password, users[logUser].password)) {
     res.status(403).send('User or password do not match! Please verify your forms!');
     return;
@@ -194,14 +147,14 @@ app.post("/logout", (req, res) => {
 // On link shortening POST, generates a random alphanumeric string for shortened link, makes it a key/pair value in urlDatabase object, and redirects to newly created shortened page
 
 app.post("/urls", (req, res) => {
-  console.log(req.body); // logs POST request body to server console. Should be the long URL
-  const userID = req.session.user_id; 
+  // console.log(req.body); // logs POST request body to server console. Should be the long URL
+  const userID = req.session.user_id;
   const shortURL = generateRandomString();
   if (!req.body.longURL) {
     return res.status(400).send('Web address cannot be empty!');
   }
   urlDatabase[shortURL] = { longURL: req.body.longURL, userID };
-  console.log(urlDatabase);
+  // console.log(urlDatabase);
   res.redirect(`/urls/${shortURL}`);
 });
 
@@ -211,7 +164,6 @@ app.post("/urls", (req, res) => {
 
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id].longURL;
-  console.log(longURL);
   if (longURL.includes("http://") || longURL.includes("https://")) {
     res.redirect(longURL);
   } else {
@@ -222,11 +174,10 @@ app.get("/u/:id", (req, res) => {
 // Updates an existing long page
 
 app.post("/urls/:id", (req, res) => {
-  console.log(req.body); // prints the new URL in console
   const shortURL = req.params.id;
   const longURL = req.body.longURL;
   const userID = req.session.user_id;
-  const userURL = urlsForUser(userID);
+  const userURL = urlsForUser(urlDatabase, userID);
   if (!longURL) {
     return res.status(400).send('Web address cannot be empty!');
   }
@@ -242,10 +193,9 @@ app.post("/urls/:id", (req, res) => {
 app.post("/urls/:id/delete", (req, res) => {
   const userID = req.session.user_id;
   const shortURL = req.params.id;
-  const userURL = urlsForUser(userID);
+  const userURL = urlsForUser(urlDatabase, userID);
   if (userURL.hasOwnProperty(shortURL)) {
     delete urlDatabase[shortURL];
-    console.log(urlDatabase); // prints object without deleted URL in the console
     return res.redirect("/urls");
   }
   res.status(403).send('TinyURL does not belong to current user, permission denied!\n');
