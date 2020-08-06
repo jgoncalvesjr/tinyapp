@@ -1,4 +1,4 @@
-// Middleware Depedencies, helper functions and databases
+// Middleware Dependencies, helper functions and databases
 
 const express = require("express");
 const bodyParser = require("body-parser");
@@ -151,6 +151,9 @@ app.post("/login", (req, res) => {
 // User logout. Clears cookie session
 
 app.delete("/logout", (req, res) => {
+  if (!req.session) {
+    res.status(404).send('User not found!');
+  }
   req.session = null;
   res.redirect('/urls');
 });
