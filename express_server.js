@@ -181,7 +181,7 @@ app.get("/u/:id", (req, res) => {
   
   const longURL = urlDatabase[req.params.id].longURL;
   
-  if (isValidURL(longURL)) {
+  if (isCompleteURL(longURL)) {
     res.redirect(longURL);
   } else {
     res.redirect(`http://${longURL}`);

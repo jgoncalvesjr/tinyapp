@@ -25,7 +25,7 @@ const getUserByEmail = (email, database) => {
 };
 
 // Validates a URL address
-const isValidURL = url => {
+const isCompleteURL = url => {
   return url.toLowerCase().startsWith("http://") || url.toLowerCase().startsWith("https://");
 };
 
@@ -39,5 +39,5 @@ module.exports = {
   generateRandomString,
   getUserByEmail,
   urlsForUser,
-  isValidURL
+  isCompleteURL
 };
