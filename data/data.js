@@ -1,7 +1,6 @@
 // Databases here
 
 // User Database
-
 const users = {
   "xp106b": {
     id: "xp106b",
@@ -16,7 +15,6 @@ const users = {
 };
 
 // URL Database
-
 const urlDatabase = {
   "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userID: "xp106b" },
   "9sm5xK": { longURL: "http://www.google.com", userID: "xp106b" }
