@@ -179,7 +179,7 @@ app.get("/u/:id", (req, res) => {
     return res.status(404).send('TinyURL not found!\n');
   }
   const longURL = urlDatabase[req.params.id].longURL;
-  if (longURL.includes("http://") || longURL.includes("https://")) {
+  if (longURL.toLowerCase().startsWith("http://") || longURL.toLowerCase().startsWith("https://")) {
     res.redirect(longURL);
   } else {
     res.redirect(`http://${longURL}`);
