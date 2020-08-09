@@ -10,7 +10,7 @@ const {
   generateRandomString,
   getUserByEmail,
   urlsForUser,
-  isValidURL
+  isCompleteURL
 } = require('./helpers/helpers');
 const {
   users,
