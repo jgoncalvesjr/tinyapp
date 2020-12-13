@@ -1,8 +1,12 @@
 # TinyApp Project
 
-#### Version: 1.0.0
+#### Version: 1.0.1
 
 TinyApp is a full stack web application built with Node and Express that allows users to shorten long URLs (à la bit.ly).
+
+#### Version changes
+
+- Implement basic analytics: Visits, unique visits, created at and visited at timestamps
 
 # Final Product
 
@@ -48,9 +52,11 @@ Only **you** may update any TinyURL you may have created. If anyone else tries t
 - cookie-session
 - method-override
 - Morgan
+- MomentJS
 
 # Getting Started
 
+- Fork this repository, then `git clone` to clone repository into your local machine.
 - Install all dependencies (using the `npm install` command).
 - Run the development web server using the `npm start` command. 
 - If you do not wish to use Morgan for server monitoring, you may run the development server using the `node express_server.js` command instead.
