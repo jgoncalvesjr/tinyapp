@@ -16,8 +16,20 @@ const users = {
 
 // URL Database
 const urlDatabase = {
-  "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userID: "xp106b" },
-  "9sm5xK": { longURL: "http://www.google.com", userID: "xp106b" }
+  "b2xVn2": { 
+    longURL: "http://www.lighthouselabs.ca", 
+    userID: "xp106b", 
+    urlVisits: 0, 
+    uniqueVisits: [], 
+    createdAt: "November 15th 2017, 11:59:59am",
+    visitedAt: "November 16th 2017, 11:59:59pm" },
+  "9sm5xK": { 
+    longURL: "http://www.google.com", 
+    userID: "xp106b", 
+    urlVisits: 0, 
+    uniqueVisits: [], 
+    createdAt: "July 21st 2018, 1:20:11pm", 
+    visitedAt: "July 21st 2018, 1:20:11pm" }
 };
 
 module.exports = {

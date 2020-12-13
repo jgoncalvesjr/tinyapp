@@ -15,6 +15,12 @@
       <div class="card-body">
         <h5 class="card-title">TinyURL for: <%= longURL %></h5>
         <p class="card-text">Short URL: <a href="/u/<%= shortURL %>" target="_blank"><%= shortURL %></a></p>
+        <p class="card-text">Created At: <%= createdAt %></p>
+        <% if (!visitedAt) { %>
+        <p class="card-text">This Short URL has never been visited!</p>
+        <% } else { %>
+        <p class="card-text">Last Visited At: <%= visitedAt %></p>
+        <% } %>
       </div>
     <div class="card-footer text-muted"></div>
   </div>

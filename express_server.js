@@ -3,6 +3,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
+const moment = require('moment');
 const app = express();
 const morgan = require('morgan');
 const methodOverride = require('method-override');
@@ -96,7 +97,10 @@ app.get("/urls/:id", (req, res) => {
   const templateVars = {
     user: users[user],
     shortURL: req.params.id,
-    longURL: urlDatabase[req.params.id].longURL };
+    longURL: urlDatabase[req.params.id].longURL,
+    createdAt: urlDatabase[req.params.id].createdAt,
+    visitedAt: urlDatabase[req.params.id].visitedAt
+  };
   
   if (!user) {
     return res.redirect('/urls');
@@ -159,7 +163,7 @@ app.delete("/logout", (req, res) => {
   res.redirect('/urls');
 });
 
-// Created new short URL, stores it to URL database associating it to creator user, and redirects to new short URL details
+// Create new short URL, stores it to URL database associating it to creator user, and redirects to new short URL details
 app.post("/urls", (req, res) => {
   const userID = req.session.user_id;
   const shortURL = generateRandomString();
@@ -168,19 +172,34 @@ app.post("/urls", (req, res) => {
     return res.status(400).send('Web address cannot be empty!');
   }
   
-  urlDatabase[shortURL] = { longURL: req.body.longURL, userID };
+  urlDatabase[shortURL] = { longURL: req.body.longURL,
+                            urlVisits: 0,
+                            uniqueVisits: [],
+                            createdAt: moment().format('MMMM Do YYYY, h:mm:ss a'),
+                            visitedAt: "",
+                            userID 
+                          };
   res.redirect(`/urls/${shortURL}`);
 });
 
 // Redirection from shortened URL to original URL. Makes sure it goes to a http:// address
 app.get("/u/:id", (req, res) => {
+  const userID = req.session.user_id;
   
   if (!urlDatabase[req.params.id]) {
     return res.status(404).send('TinyURL not found!\n');
   }
   
   const longURL = urlDatabase[req.params.id].longURL;
-  
+  // Increases page visit count by 1, updates last visit timestamp
+  urlDatabase[req.params.id].urlVisits++;
+  urlDatabase[req.params.id].visitedAt = moment().format('MMMM Do YYYY, h:mm:ss a');
+
+  // If logged user never visited page, adds to unique visitor list
+  if (!urlDatabase[req.params.id].uniqueVisits.includes(userID)) {
+    urlDatabase[req.params.id].uniqueVisits.push(userID);
+  }
+
   if (isCompleteURL(longURL)) {
     res.redirect(longURL);
   } else {
